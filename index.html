@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Speed | Real-time MQTT Race</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div id="login-overlay" class="overlay">
+        <div class="login-card">
+            <h2>🏎️ Join the Race</h2>
+            <p style="opacity: 0.6; font-size: 0.9rem;">Enter your Oracle name to start</p>
+            <input type="text" id="player-name" placeholder="Oracle NAME" maxlength="15">
+            <button id="btn-join" class="btn btn-primary">Enter Arena</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Quantum Speed</h1>
+            <div id="mqtt-status" class="status-badge">System Initializing...</div>
+        </header>
+
+        <main class="game-area">
+            <div id="winner-announcement" class="winner-banner">
+                🎉 <span id="winner-name">ORACLE_NAME</span> WON THE RACE!
+            </div>
+
+            <div class="track" id="race-track">
+                <!-- Lanes will be generated dynamically -->
+                <div class="finish-line"></div>
+            </div>
+
+            <div class="controls">
+                <button id="btn-ready" class="btn btn-primary" disabled>Ready to Race</button>
+                <div id="instruction" style="text-align: center; opacity: 0.5; margin-top: 10px;">
+                    Wait for host to start... (Then tap SPACEBAR rapidly!)
+                </div>
+            </div>
+        </main>
+
+        <section class="leaderboard">
+            <h2>🏆 Hall of Fame</h2>
+            <ul id="hall-of-fame" class="hall-of-fame-list">
+                <!-- Top scores from MQTT Retain -->
+                <li class="hall-item" style="opacity: 0.3;">Scanning historical echoes...</li>
+            </ul>
+        </section>
+    </div>
+
+    <!-- MQTT.js and Game Logic -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="app.js" type="module"></script>
+</body>
+
+</html>
