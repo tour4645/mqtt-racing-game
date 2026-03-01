@@ -3,13 +3,16 @@ const MQTT_BROKER = 'wss://mqtt-dashboard.com:8884/mqtt';
 const TOPIC_PLAYER = 'quantum/race/v1/players';
 const TOPIC_RANKING = 'quantum/race/v1/ranking';
 const TRACK_LENGTH = 100; // units
+const TOTAL_LAPS = 2;    // จำนวนรอบที่ต้องวิ่ง
 
 let mqttClient;
 let myId = 'p_' + Math.random().toString(16).substring(2, 8);
 let myName = '';
+let myEmoji = '🚀';  // default emoji
 let myPos = 0;
+let myLap = 1;           // รอบปัจจุบัน
 let gameState = 'waiting'; // waiting, racing, finished
-let players = {}; // { id: { name, pos, element } }
+let players = {}; // { id: { name, pos, lap, element } }
 
 const UI = {
     login: document.getElementById('login-overlay'),
@@ -51,44 +54,68 @@ function initMQTT() {
     });
 }
 
+// Emoji Picker Logic
+document.getElementById('emoji-picker').addEventListener('click', (e) => {
+    const opt = e.target.closest('.emoji-opt');
+    if (!opt) return;
+    document.querySelectorAll('.emoji-opt').forEach(el => el.classList.remove('selected'));
+    opt.classList.add('selected');
+    myEmoji = opt.dataset.emoji;
+});
+
 // Player Joins
 UI.joinBtn.onclick = () => {
     myName = UI.nameInput.value.trim() || 'Anonymous Oracle';
     UI.login.style.display = 'none';
     UI.readyBtn.disabled = false;
-
-    // Announce presence
-    publishPos(0);
+    publishPos(0, 1);
 };
 
-// Movement Logic (Spacebar)
+// Movement Logic (Spacebar) — กดค้างไม่นับ, นับเฉพาะกด 1 ครั้งต่อ 1 ที
 window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && gameState === 'racing') {
+    if (e.code === 'Space' && gameState === 'racing' && !e.repeat) {
         movePlayer();
     }
 });
 
 function movePlayer() {
-    myPos += 1; // Increment position
+    myPos += 1;
     if (myPos >= TRACK_LENGTH) {
-        finishRace();
+        if (myLap >= TOTAL_LAPS) {
+            myPos = TRACK_LENGTH;
+            updateMyVisual();
+            publishPos(myPos, myLap);
+            finishRace();
+            return;
+        } else {
+            myLap++;
+            myPos = 0; // เริ่มรอบใหม่
+            updateLapDisplay();
+        }
     }
     updateMyVisual();
-    publishPos(myPos);
+    publishPos(myPos, myLap);
 }
 
-function publishPos(pos) {
+function publishPos(pos, lap = 1) {
     mqttClient.publish(`${TOPIC_PLAYER}/${myId}`, JSON.stringify({
         name: myName,
+        emoji: myEmoji,
         pos: pos,
+        lap: lap,
         ts: Date.now()
     }));
+}
+
+function updateLapDisplay() {
+    const inst = document.getElementById('instruction');
+    if (inst) inst.innerText = `LAP ${myLap} / ${TOTAL_LAPS} — Tap SPACEBAR rapidly!`;
 }
 
 function updateMyVisual() {
     let el = document.getElementById(`racer-${myId}`);
     if (!el) {
-        el = createRacerElement(myId, myName);
+        el = createRacerElement(myId, myName, myEmoji);
     }
     const percent = Math.min(myPos, TRACK_LENGTH);
     el.style.left = `calc(${percent}% - 60px)`;
@@ -96,22 +123,25 @@ function updateMyVisual() {
 
 function updateOtherPlayer(pid, data) {
     if (!players[pid]) {
-        players[pid] = { ...data, element: createRacerElement(pid, data.name) };
+        players[pid] = { ...data, element: createRacerElement(pid, data.name, data.emoji || '🚀') };
     }
     players[pid].pos = data.pos;
+    players[pid].lap = data.lap || 1;
     const percent = Math.min(data.pos, TRACK_LENGTH);
     players[pid].element.style.left = `calc(${percent}% - 60px)`;
+    const lapBadge = document.getElementById(`lap-${pid}`);
+    if (lapBadge) lapBadge.innerText = `Lap ${data.lap || 1}/${TOTAL_LAPS}`;
 }
 
-function createRacerElement(id, name) {
+function createRacerElement(id, name, emoji = '🚀') {
     const lane = document.createElement('div');
     lane.className = 'player-lane';
     lane.id = `lane-${id}`;
 
     const racer = document.createElement('div');
     racer.className = 'racer';
-    racer.id = racer.id = `racer-${id}`;
-    racer.innerHTML = `🚀<div class="racer-name">${name}</div>`;
+    racer.id = `racer-${id}`;
+    racer.innerHTML = `<span class="racer-icon" id="icon-${id}">${emoji}</span><div class="racer-name">${name}</div><div class="lap-badge" id="lap-${id}">Lap 1/${TOTAL_LAPS}</div>`;
 
     lane.appendChild(racer);
     UI.track.appendChild(lane);
@@ -121,9 +151,12 @@ function createRacerElement(id, name) {
 // Game Flow
 UI.readyBtn.onclick = () => {
     gameState = 'racing';
+    myLap = 1;
+    myPos = 0;
     UI.readyBtn.style.display = 'none';
     UI.status.innerText = 'RACE IN PROGRESS';
     UI.status.style.color = 'var(--gold)';
+    updateLapDisplay();
 };
 
 function finishRace() {

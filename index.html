@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum Speed | Real-time MQTT Race</title>
+    <title>PUP Rocket 🚀 | Real-time MQTT Race</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -16,13 +16,28 @@
             <h2>🏎️ Join the Race</h2>
             <p style="opacity: 0.6; font-size: 0.9rem;">Enter your Oracle name to start</p>
             <input type="text" id="player-name" placeholder="Oracle NAME" maxlength="15">
+            <p style="opacity: 0.6; font-size: 0.85rem; margin-bottom: 10px;">Choose your racer</p>
+            <div class="emoji-picker" id="emoji-picker">
+                <span class="emoji-opt selected" data-emoji="🚀">🚀</span>
+                <span class="emoji-opt" data-emoji="🛸">🛸</span>
+                <span class="emoji-opt" data-emoji="🏎️">🏎️</span>
+                <span class="emoji-opt" data-emoji="⚡">⚡</span>
+                <span class="emoji-opt" data-emoji="🦅">🦅</span>
+                <span class="emoji-opt" data-emoji="🐉">🐉</span>
+                <span class="emoji-opt" data-emoji="🦊">🦊</span>
+                <span class="emoji-opt" data-emoji="🐺">🐺</span>
+                <span class="emoji-opt" data-emoji="🔥">🔥</span>
+                <span class="emoji-opt" data-emoji="💎">💎</span>
+                <span class="emoji-opt" data-emoji="🤖">🤖</span>
+                <span class="emoji-opt" data-emoji="👾">👾</span>
+            </div>
             <button id="btn-join" class="btn btn-primary">Enter Arena</button>
         </div>
     </div>
 
     <div class="container">
         <header>
-            <h1>Quantum Speed</h1>
+            <h1>PUP Rocket 🚀</h1>
             <div id="mqtt-status" class="status-badge">System Initializing...</div>
         </header>
 
